@@ -9,9 +9,11 @@ class Excell extends Component {
             data: this.props.initialData,
             sortby: null,
             descending: false,
-            edit: null
+            edit: null,
+            search: false
         };
     }
+    _preSearchData: null;
 
     _sort = e => {
         let column = e.target.cellIndex;
@@ -50,8 +52,7 @@ class Excell extends Component {
             data: data
         });
     };
-
-    render() {
+    _renderTable() {
         return (
             <table>
                 <thead>
@@ -71,6 +72,7 @@ class Excell extends Component {
                     </tr>
                 </thead>
                 <tbody onDoubleClick={this._showEditor}>
+                    {this._renderSearch()}
                     {this.state.data.map((row, rowI) => {
                         return (
                             <tr key={rowI}>
@@ -102,6 +104,47 @@ class Excell extends Component {
                     })}
                 </tbody>
             </table>
+        );
+    }
+    _renderToolbar() {
+        return (
+            <button className="toolbar" onClick={this._toogleSearch}>
+                Search
+            </button>
+        );
+    }
+    _toogleSearch = () => {
+        if (this.state.search) {
+            this.setState({ data: this._preSearchData, search: false });
+            this._preSearchData = null;
+        } else {
+            this._preSearchData = this.state.data;
+            this.setState({ search: true });
+        }
+    };
+    _renderSearch() {
+        if (!this.state.search) {
+            return null;
+        }
+        return (
+            <tr onChange={this._search}>
+                {this.props.headers.map((_ignore, i) => {
+                    return (
+                        <td key={i}>
+                            <input type="text" data-idx={i} />
+                        </td>
+                    );
+                })}
+            </tr>
+        );
+    }
+
+    render() {
+        return (
+            <div>
+                {this._renderToolbar()}
+                {this._renderTable()}
+            </div>
         );
     }
 }
