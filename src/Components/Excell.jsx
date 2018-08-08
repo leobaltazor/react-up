@@ -10,9 +10,11 @@ class Excell extends Component {
             sortby: null,
             descending: false,
             edit: null,
-            search: false
+            search: false,
+            serchColumn: []
         };
     }
+
     _preSearchData: null;
 
     _sort = e => {
@@ -74,6 +76,20 @@ class Excell extends Component {
                 <tbody onDoubleClick={this._showEditor}>
                     {this._renderSearch()}
                     {this.state.data.map((row, rowI) => {
+                        for (let j = 0; j < row.length; j++) {
+                            const element = row[j];
+                            let needle = this.state.serchColumn[j];
+                            if (needle) {
+                                if (
+                                    !~element
+                                        .toString()
+                                        .toLowerCase()
+                                        .indexOf(needle)
+                                ) {
+                                    return false;
+                                }
+                            }
+                        }
                         return (
                             <tr key={rowI}>
                                 {row.map((cell, i) => {
@@ -108,10 +124,42 @@ class Excell extends Component {
     }
     _renderToolbar() {
         return (
-            <button className="toolbar" onClick={this._toogleSearch}>
-                Search
-            </button>
+            <div className="toolbar">
+                <button onClick={this._toogleSearch}>
+                    {this.state.search ? "Выполняется поиск" : "Search"}
+                </button>
+                <a onClick={this._download.bind(this, "json")} href="data.json">
+                    Export JSON
+                </a>
+                <a onClick={this._download.bind(this, "csv")} href="data.json">
+                    Export CSV
+                </a>
+            </div>
         );
+    }
+    _download(format, ev) {
+        let contents =
+            format === "json"
+                ? JSON.stringify(this.state.data)
+                : this.state.data.reduce(function(result, row) {
+                      return (
+                          result +
+                          row.reduce(function(rowresult, cell, idx) {
+                              return (
+                                  rowresult +
+                                  '"' +
+                                  cell.replace(/"/g, '""') +
+                                  '"' +
+                                  (idx < row.length - 1 ? "," : "")
+                              );
+                          }, "") +
+                          "\n"
+                      );
+                  }, "");
+        var URL = window.URL || window.webkitURL;
+        var blob = new Blob([contents], { type: "text/" + format });
+        ev.target.href = URL.createObjectURL(blob);
+        ev.target.download = "data." + format;
     }
     _toogleSearch = () => {
         if (this.state.search) {
@@ -138,6 +186,21 @@ class Excell extends Component {
             </tr>
         );
     }
+    _search = e => {
+        let needle = e.target.value.toLowerCase();
+        let serchColumn = this.state.serchColumn;
+        let idx = e.target.dataset.idx; // в каком столбце искать
+        serchColumn[idx] = needle;
+        if (!needle) {
+            this.setState({
+                serchColumn
+            });
+            return;
+        }
+        this.setState({
+            serchColumn
+        });
+    };
 
     render() {
         return (
