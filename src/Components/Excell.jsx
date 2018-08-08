@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 
 class Excell extends Component {
-    displayName = "Excel";
+    displayName = "Excell";
     constructor(props) {
         super(props);
         this.state = {
